@@ -1,12 +1,169 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>App</title>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <meta
+      name="google-signin-client_id"
+      content="460509145266-8p7jsum3bm4rc345435qcaaet2oj0pj3.apps.googleusercontent.com"
+    />
+    <title>Google Sign-in</title>
   </head>
   <body>
-    <h1 style="text-align: center">SongByKey API Backend</h1>
+    <h1>Google Sign-in</h1>
+    <div class="g-signin2" data-onsuccess="onSignIn"></div>
+    <button id="google_signout">Sign out</button>
+    <script>
+      function onSignIn(googleUser) {
+        var id_token = googleUser.getAuthResponse().id_token;
+
+        fetch("http://localhost:3001/api/auth/google", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ token: id_token }),
+        })
+          .then((res) => res.json())
+          .then((res) => {
+            console.log(res);
+            // localStorage.setItem("email", res.usuario.correo);
+          })
+          .catch(console.warn);
+      }
+
+      const button = document.getElementById("google_signout");
+
+      button.addEventListener("click", signOut);
+      function signOut() {
+        var auth2 = gapi.auth2.getAuthInstance();
+        auth2.signOut().then(function () {
+          // console.log(`${localStorage.getItem("email")} User signed out.`);
+          console.log(` User signed out.`);
+        });
+      }
+    </script>
+  </body>
+</html> -->
+
+<html>
+  <head>
+    <link
+      href="https://fonts.googleapis.com/css?family=Roboto"
+      rel="stylesheet"
+      type="text/css"
+    />
+    <script src="https://apis.google.com/js/api:client.js"></script>
+    <script>
+      var googleUser = {};
+      var startApp = function () {
+        gapi.load("auth2", function () {
+          // Retrieve the singleton for the GoogleAuth library and set up the client.
+          auth2 = gapi.auth2.init({
+            client_id:
+              "460509145266-8p7jsum3bm4rc345435qcaaet2oj0pj3.apps.googleusercontent.com",
+            cookiepolicy: "single_host_origin",
+            // Request scopes in addition to 'profile' and 'email'
+            //scope: 'additional_scope'
+          });
+          attachSignin(document.getElementById("customBtn"));
+        });
+      };
+
+      function attachSignin(element) {
+        console.log(element.id);
+        auth2.attachClickHandler(
+          element,
+          {},
+          function (googleUser) {
+            // document.getElementById("name").innerText =
+            //   "Signed in: " + googleUser.getBasicProfile().getName();
+            // window.location = "/create.html";
+
+            const id_token = googleUser.getAuthResponse().id_token;
+            fetch("http://localhost:3001/api/auth/google", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ token: id_token }),
+            })
+              .then((res) => res.json())
+              .then((res) => {
+                console.log(res);
+              })
+              .catch(console.warn);
+          },
+          function (error) {
+            alert(JSON.stringify(error, undefined, 2));
+          }
+        );
+      }
+    </script>
+    <style type="text/css">
+      #customBtn {
+        display: inline-block;
+        background: white;
+        color: #444;
+        width: 190px;
+        border-radius: 5px;
+        border: thin solid #888;
+        box-shadow: 1px 1px 1px grey;
+        white-space: nowrap;
+      }
+      #customBtn:hover {
+        cursor: pointer;
+      }
+      span.label {
+        font-family: serif;
+        font-weight: normal;
+      }
+      span.icon {
+        /* background: url("/identity/sign-in/g-normal.png") transparent 5px 50%
+          no-repeat; */
+        display: inline-block;
+        vertical-align: middle;
+        width: 42px;
+        height: 42px;
+      }
+      span.buttonText {
+        display: inline-block;
+        vertical-align: middle;
+        padding-left: 42px;
+        padding-right: 42px;
+        font-size: 14px;
+        font-weight: bold;
+        /* Use the Roboto font that is loaded in the <head> */
+        font-family: "Roboto", sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- In the callback, you would hide the gSignInWrapper element on a
+  successful sign in -->
+    <div id="gSignInWrapper">
+      <span class="label">Sign in with:</span>
+      <div id="customBtn" class="customGPlusSignIn">
+        <span class="icon"></span>
+        <span class="buttonText">Login</span>
+      </div>
+    </div>
+    <div id="name"></div>
+    <button id="google_signout">Sign out</button>
+    <script>
+      startApp();
+      const button = document.getElementById("google_signout");
+
+      button.addEventListener("click", signOut);
+      function signOut() {
+        var auth2 = gapi.auth2.getAuthInstance();
+        auth2.signOut().then(function () {
+          // console.log(`${localStorage.getItem("email")} User signed out.`);
+          console.log(` User signed out.`);
+        });
+      }
+    </script>
   </body>
 </html>

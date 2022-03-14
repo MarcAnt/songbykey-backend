@@ -1,4 +1,4 @@
-const { response, request } = require("express");
+const { response } = require("express");
 const {
   getKeyByFilters,
   getChordByFilters,
@@ -9,6 +9,7 @@ const {
 } = require("../helpers/getBy");
 
 const Songs = require("../models/Song");
+const User = require("../models/User");
 const { ChordModel } = require("../models/Chord");
 const { ToneModel } = require("../models/Tone");
 
@@ -52,10 +53,36 @@ const getAllTones = async (req, res = response) => {
 
 const createSong = async (req, res = response) => {
   const song = new Songs(req.body);
-
-  console.log(song);
-
+  const { email } = req.body;
   try {
+    const userDB = await User.findOne({ email });
+
+    if (!userDB) {
+      return res.status(401).json({
+        msg: `El usuario ${userDB.email}, no existe.`,
+      });
+    }
+    if (userDB.state === false) {
+      return res.status(401).json({
+        msg: `Ya no puedes crear mas canciones. Comunicate con el administrador.`,
+      });
+    }
+    if (userDB.limit <= 0) {
+      return res.status(401).json({
+        msg: `Ya no puedes crear mas canciones. Comunicate con el administrador.`,
+      });
+    }
+
+    const filter = { email: userDB.email };
+    let update;
+
+    if (userDB.limit <= 1) {
+      update = { state: (userDB.state = false), limit: userDB.limit - 1 };
+    } else {
+      update = { limit: userDB.limit - 1 };
+    }
+
+    await User.findOneAndUpdate(filter, update);
     const songGuardado = await song.save();
     return res.json({
       ok: true,
@@ -77,13 +104,13 @@ const createPopularChord = async (req, res = response) => {
   const { chord } = req.body;
   try {
     let createChord;
-    const fC = await Chords.findOne({ chord });
+    const fC = await ChordModel.findOne({ chord });
 
     if (fC === null || fC.length < 0 || fC === undefined) {
       createChord = await newChord.save();
     } else {
       const id = fC._id;
-      createChord = await Chords.findByIdAndUpdate(
+      createChord = await ChordModel.findByIdAndUpdate(
         id,
         { $inc: { searches: 1 } },
         { new: true }
@@ -103,16 +130,17 @@ const createPopularChord = async (req, res = response) => {
 
 const createPopularTone = async (req, res = response) => {
   const newTone = new ToneModel(req.body);
-  const { tone } = req.body;
+  const { full } = req.body;
+
   try {
     let createTone;
-    const fT = await Tones.findOne({ tone });
+    const fT = await ToneModel.findOne({ full });
 
     if (fT === null || fT.length < 0 || fT === undefined) {
       createTone = await newTone.save();
     } else {
       const id = fT._id;
-      createTone = await Tones.findByIdAndUpdate(
+      createTone = await ToneModel.findByIdAndUpdate(
         id,
         { $inc: { searches: 1 } },
         { new: true }
@@ -148,16 +176,13 @@ const getPopularTone = async (req, res = response) => {
 
 const getChordByFilter = async (req, res = response) => {
   const url = require("url");
-  // const qstring = require("querystring");
-
   const songs = await Songs.find();
   const q = url.parse(req.url, true).query;
   const qs = url.parse(req.url, true).search;
-  // console.log({ q, qs });
-  // console.log(Object.values(q), Object.keys(q));
 
-  const songTonesMatches = getChordByFilters(songs, Object.values(q));
-  return res.status(200).json({ qs, q, songTonesMatches });
+  const songChordsMatches = getChordByFilters(songs, Object.values(q));
+
+  return res.status(200).json({ qs, q, songChordsMatches });
 };
 // Filtrar por tono
 
@@ -220,13 +245,6 @@ const editSong = async (req, res = response) => {
       });
     }
 
-    // if (evento.user.toString() !== req.uid) {
-    //   return res.status(401).status(401).json({
-    //     ok: false,
-    //     msg: "No tiene privilegio de editar este evento",
-    //   });
-    // }
-
     //Se le agrega el id ya que eso no viene en el req.body
     const newSong = {
       ...req.body,
@@ -266,25 +284,12 @@ const deleteSong = async (req, res = response) => {
       });
     }
 
-    // if (evento.user.toString() !== req.uid) {
-    //   return res.status(401).status(401).json({
-    //     ok: false,
-    //     msg: "No tiene privilegio de eliminar este evento",
-    //   });
-    // }
-
-    //Se le agrega el id ya que eso no viene en el req.body
-    // const nuevoEvento = {
-    //   ...req.body,
-    //   user: req.uid,
-    // };
-
     // Para que retorne el evento recien actualizado {new: true} sino retorna el viejo objecto
     const songEliminado = await Songs.findByIdAndDelete(songId);
     if (songEliminado) {
       res.json({
         ok: true,
-        msg: "Evento eliminado",
+        msg: "Cancion eliminado",
       });
     }
   } catch (error) {

@@ -19,6 +19,11 @@ const SongSchema = Schema({
     type: [ChordSchema],
     required: true,
   },
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    // required: true,
+  },
   created_at: {
     type: Date,
     required: true,

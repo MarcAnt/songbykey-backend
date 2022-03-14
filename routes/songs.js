@@ -21,9 +21,10 @@ const {
   deleteSong,
   editSong,
 } = require("../controllers/songs");
-const { checkChord, checkKey } = require("../helpers/formatKeyAndChord");
+const { checkKey } = require("../helpers/formatKeyAndChord");
 
 const { validarCampos } = require("../middlewares/validar-campos");
+const { validarJWT } = require("../middlewares/validar-jwt");
 
 const router = Router();
 
@@ -33,42 +34,11 @@ router.post("/", getSongs);
 // ontener todos los acordes
 router.post("/chords", getAllChords);
 
-// ontener todos los acordes
-router.post("/tones", getAllTones);
-
-// Buscar por tono o acorde
-router.post(
-  "/chord",
-  check("tones", "La tonalidad no tiene un formato correcto").custom(checkKey),
-  validarCampos,
-  getSongByChord
-);
-
-router.post(
-  "/key",
-  check("tones", "La tonalidad no tiene un formato correcto").custom(checkKey),
-  validarCampos,
-  getSongByKey
-);
-
-// Filtrar por tonalidad
-router.post(
-  "/search/key",
-  check("tones", "La tonalidad no tiene un formato correcto").custom(checkKey),
-  validarCampos,
-  getKeyByFilter
-);
+// Buscar por acorde
+router.post("/chord", [checkKey, validarCampos], getSongByChord);
 
 // Fltrar por acorde
-router.post(
-  "/search/chord/",
-  check("chords", "La tonalidad no tiene un formato correcto").custom(checkKey),
-  validarCampos,
-  getChordByFilter
-);
-
-// Crear songs
-router.post("/create", createSong);
+router.post("/search/chord/", [checkKey, validarCampos], getChordByFilter);
 
 // Crear el acorde mas buscado
 router.post("/create-popular-chord", createPopularChord);
@@ -76,14 +46,33 @@ router.post("/create-popular-chord", createPopularChord);
 // Obtener el acorde mas buscado
 router.post("/get-popular-chord", getPopularChord);
 
+// obtener todos los tonos
+router.post("/tones", getAllTones);
+
+// Buscar por tono
+router.post("/key", [checkKey, validarCampos], getSongByKey);
+
+// Filtrar por tonalidad
+router.post("/search/key", [checkKey, validarCampos], getKeyByFilter);
+
 // Crear el acorde mas buscado
 router.post("/create-popular-tone", createPopularTone);
 
 // Obtener el acorde mas buscado
 router.post("/get-popular-tone", getPopularTone);
 
-// Editar una cancion o song
+// Crear songs
+router.post(
+  "/create",
+  [
+    validarJWT,
+    check("user", "El user es obligatorio").not().isEmpty(),
+    validarCampos,
+  ],
+  createSong
+);
 
+// Editar una cancion o song
 router.put("/:id", editSong);
 
 // Eliminar una cancion o song

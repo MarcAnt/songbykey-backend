@@ -1,20 +1,10 @@
+const { symbols } = require("./symbols");
+
 const hasKeySignature = (searchArray = []) => {
   const arr = searchArray.slice(1, searchArray.length);
 
   const transformed = arr.map((signature) => {
-    if (signature === "sharp") {
-      return "#";
-    } else if (signature === "flat") {
-      return "b";
-    } else if (signature === "slash") {
-      return "/";
-    } else if (signature === "M") {
-      return "";
-    } else if (signature === "+") {
-      return "aug";
-    } else {
-      return signature;
-    }
+    return signature ? symbols[signature] : signature;
   });
   // console.log(transformed);
   return transformed;
@@ -70,91 +60,24 @@ const getBy = (songs = [], typeSearch, searchBy, searchFilter = null) => {
 // Obtener todos los acordes de todos los registros
 
 const getChords = (songs = []) => {
-  const allChords = new Set(songs.flatMap((song) => song.chords));
+  const allChords = new Set(
+    songs.flatMap((song) => {
+      return song.chords.map((chord) => chord.full);
+    })
+  );
 
   return [...allChords];
 };
 
-// Obtener todos los acordes de todos los registros
+// Obtener todos los tonos de todos los registros
 
 const getTones = (songs = []) => {
-  const allTones = new Set(songs.flatMap((song) => song.tones));
+  const allTones = new Set(
+    songs.flatMap((song) => {
+      return song.tones.map((tone) => tone.full);
+    })
+  );
   return [...allTones];
-};
-
-const getByChords = (songs = [], searchBy, searchFilter = null) => {
-  // let matches = [];
-  // const arrayOfWord = searchBy.split("-");
-  // // if (searchFilter === "minor") {
-  // // }
-  // searchBy = `${arrayOfWord[0]}${hasKeySignature(arrayOfWord).join("")}`;
-  // // console.log(searchBy, arrayOfWord);
-  // // console.log(searchBy);
-  // // Si existe un filtro, aplica una busqueda especifica
-  // if (searchFilter !== null) {
-  //   songs
-  //     // Obtener primero un array con los tonos
-  //     .map((song) => {
-  //       return song.chords.find((type) => type === searchBy);
-  //     })
-  //     .filter((e, idx) => {
-  //       //Si el array tiene al menos un valor, se agrega el index de esa valor al array
-  //       return e !== undefined && matches.push(idx);
-  //     });
-  //   return matches.map((match) => songs[match]);
-  // } else {
-  //   songs
-  //     // Obtener primero un array con los tonos
-  //     .map((song) => {
-  //       return song.chords.filter((type) => {
-  //         // console.log(type);
-  //         // Si obtiene los resultados retorna true o false
-  //         return type.includes(searchBy);
-  //       });
-  //     })
-  //     // Filtrar y obtener un array con los index de las coincidencias
-  //     .filter((e, idx) => {
-  //       //Si el array tiene al menos un valor, se agrega el index de esa valor al array
-  //       return e.length > 0 && matches.push(idx);
-  //     });
-  //   return matches.map((match) => songs[match]);
-  // }
-};
-
-const getByKeys = (songs = [], searchBy, searchFilter = null) => {
-  // let matches = [];
-  // // const arrayOfWord = searchBy.split("-");
-  // // searchBy = `${arrayOfWord[0]}${hasKeySignature(arrayOfWord).join("")}`;
-  // console.log(searchBy, searchFilter);
-  // // Si existe un filtro, aplica una busqueda especifica
-  // if (searchFilter !== null) {
-  //   songs
-  //     // Obtener primero un array con los tonos
-  //     .map((song) => {
-  //       return song.tones.find((type) => type === searchBy);
-  //     })
-  //     .filter((e, idx) => {
-  //       //Si el array tiene al menos un valor, se agrega el index de esa valor al array
-  //       return e !== undefined && matches.push(idx);
-  //     });
-  //   return matches.map((match) => songs[match]);
-  // } else {
-  //   songs
-  //     // Obtener primero un array con los tonos
-  //     .map((song) => {
-  //       return song.tones.filter((type) => {
-  //         // console.log(type);
-  //         // Si obtiene los resultados retorna true o false
-  //         return type.includes(searchBy);
-  //       });
-  //     })
-  //     // Filtrar y obtener un array con los index de las coincidencias
-  //     .filter((e, idx) => {
-  //       //Si el array tiene al menos un valor, se agrega el index de esa valor al array
-  //       return e.length > 0 && matches.push(idx);
-  //     });
-  //   return matches.map((match) => songs[match]);
-  // }
 };
 
 // Filtrar por tonos
@@ -166,7 +89,7 @@ const getKeyByFilters = (songs = [], searchBy) => {
   songs
     // Obtener primero un array con los tonos
     .map((song) => {
-      return song.tones.find((type) => type === searchBy.join(""));
+      return song.tones.find((type) => type.full === searchBy.join(""));
     })
     .filter((e, idx) => {
       //Si el array tiene al menos un valor, se agrega el index de esa valor al array
@@ -179,14 +102,13 @@ const getKeyByFilters = (songs = [], searchBy) => {
 
 const getChordByFilters = (songs = [], searchBy) => {
   let matches = [];
-  hasKeySignature(searchBy);
 
   const chord = `${searchBy[0]}${hasKeySignature(searchBy).join("")}`;
-  // console.log(chord);
+
   songs
     // Obtener primero un array con los tonos
     .map((song) => {
-      return song.chords.find((type) => type === chord);
+      return song.chords.find((type) => type.full === chord);
     })
     .filter((e, idx) => {
       //Si el array tiene al menos un valor, se agrega el index de esa valor al array
@@ -204,9 +126,7 @@ const getSearchByType = (songs = [], searchBy, type) => {
     // Obtener primero un array con los tonos
     .map((song) => {
       return song[type].filter((type) => {
-        // console.log(type);
         // Si obtiene los resultados retorna true o false
-
         return type.full.includes(searchBy);
       });
     })
@@ -217,8 +137,6 @@ const getSearchByType = (songs = [], searchBy, type) => {
     });
   return matches.map((match) => songs[match]);
 };
-
-// let arrFinal = [{chord: "A", searches: 1 }, {chord: "Cm", searches: 2}, {chord: "Fm", searches: 4 }]
 
 //Agregar cuando no hay acordes iguales
 
@@ -239,7 +157,7 @@ const setMostPopular = (chord, arr) => {
 
 // Obtener el mas popular
 const getMostPopular = (arr) => {
-  //Verificar primero is existe el acorde
+  //Verificar primero si existe el acorde
   const arrList = arr.map((e) => e.searches);
   const max = Math.max(...arrList);
 
@@ -251,8 +169,6 @@ module.exports = {
   getChords,
   getTones,
   hasKeySignature,
-  getByChords,
-  getByKeys,
   getSearchByType,
   getKeyByFilters,
   getChordByFilters,

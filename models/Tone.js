@@ -1,15 +1,5 @@
 const { Schema, model } = require("mongoose");
 
-// const ToneSchema = Schema({
-//   tone: {
-//     type: String,
-//     required: true,
-//   },
-//   searches: {
-//     type: Number,
-//     required: true,
-//   },
-// });
 const ToneSchema = Schema({
   tonic: {
     type: String,

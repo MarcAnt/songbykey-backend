@@ -23,17 +23,6 @@ const ChordSchema = Schema({
   },
 });
 
-// const ChordSchema = Schema({
-//   chord: {
-//     type: String,
-//     required: true,
-//   },
-//   searches: {
-//     type: Number,
-//     required: true,
-//   },
-// });
-
 //La modificacion es solo al verlo pero no al guardarlo en la base de datos
 ChordSchema.method("toJSON", function () {
   //Forma de sacar el _id y convertirlo a id

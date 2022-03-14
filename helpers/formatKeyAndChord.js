@@ -1,3 +1,4 @@
+const { response } = require("express");
 const { notes, notesExpressions } = require("./regExp");
 
 const checkChord = (value, { req, location, path }) => {
@@ -26,7 +27,7 @@ const checkChord = (value, { req, location, path }) => {
   return result;
 };
 
-const checkKey = (value, { req, location, path }) => {
+const checkKey = (req, res = response, next) => {
   let key = null;
   console.log(req.query);
   Object.keys(req.query)[0] === "key" ||
@@ -36,11 +37,13 @@ const checkKey = (value, { req, location, path }) => {
     : (key = null);
 
   if (!key.match(notes)) {
-    return false;
+    // return false;
+    res.status(400).json({
+      msg: "La tonalidad no tiene un formato correcto",
+    });
   } else {
-    return true;
+    next();
   }
-  // return true;
 };
 
 module.exports = { checkChord, checkKey };
